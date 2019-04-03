@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -20,9 +21,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "Hej")
+}
+
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", handler)
+	router.HandleFunc("/login", loginHandler).Methods("POST")
 	http.ListenAndServe(
 		"localhost:8080",
 		router,

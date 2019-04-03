@@ -1,3 +1,5 @@
+4d63.com/gochecknoinits v0.0.0-20180528051558-14d5915061e5 h1:h34Nn8nf6uCkNqOnLH2SVsxaFOjhMkhaVWcMCDFb4RU=
+4d63.com/gochecknoinits v0.0.0-20180528051558-14d5915061e5/go.mod h1:4o1i5aXtIF5tJFt3UD1knCVmWOXg7fLYdHVu6jeNcnM=
 github.com/gorilla/handlers v1.4.0 h1:XulKRWSQK5uChr4pEgSE4Tc/OcmnU9GJuSwdog/tZsA=
 github.com/gorilla/handlers v1.4.0/go.mod h1:Qkdc/uu4tH4g6mTK6auzZ766c4CA0Ng8+o/OAirnOIQ=
 github.com/gorilla/mux v1.7.0 h1:tOSd0UKHQd6urX6ApfOn4XdBMY6Sh1MfxV3kmaazO+U=
