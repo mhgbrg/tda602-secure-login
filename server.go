@@ -14,15 +14,20 @@ import (
 	"github.com/gorilla/mux"
 )
 
-const defaultUsername = "admin"
-const defaultPassword = "password"
+// --- MAIN ---
 
-var users []User
-
-type User struct {
-	username       string
-	hashedPassword []byte
+func main() {
+	users := loadUsers()
+	router := mux.NewRouter()
+	router.HandleFunc("/", indexHandler).Methods("GET")
+	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
+	http.ListenAndServe(
+		"localhost:8080",
+		router,
+	)
 }
+
+// --- HANDLERS ---
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("login.html")
@@ -36,60 +41,52 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	username := r.Form.Get("username")
-	password := r.Form.Get("password")
-
-	//watch out for race conditions (TOCTOU) and timing attack
-	for _, user := range users {
-
-		if username == user.username {
-
-			if checkPW(password, user.hashedPassword) {
-				fmt.Fprint(w, "Login successful!!!")
-			}
-		} else {
-			fmt.Fprint(w, "Access denied!!!")
+func loginHandler(users map[string][]byte) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := r.ParseForm()
+		if err != nil {
+			log.Panic(err)
 		}
+
+		username := r.Form.Get("username")
+		password := r.Form.Get("password")
+
+		correctPassword, ok := users[username]
+		if !ok {
+			fmt.Fprintf(w, "Access denied (invalid username)!!!")
+			return
+		}
+
+		if !checkPassword(password, correctPassword) {
+			fmt.Fprintf(w, "Access denied (wrong password)!!!")
+			return
+		}
+
+		fmt.Fprint(w, "Login successful!!!")
 	}
 }
 
-func main() {
-	users = initDatabase()
-	router := mux.NewRouter()
-	router.HandleFunc("/", indexHandler).Methods("GET")
-	router.HandleFunc("/login", loginHandler).Methods("POST")
-	http.ListenAndServe(
-		"localhost:8080",
-		router,
-	)
-}
+// --- HELPERS ---
 
-func initDatabase() []User {
+func loadUsers() map[string][]byte {
 	file, err := os.Open("database.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	users := make([]User, 0)
+	users := make(map[string][]byte, 0)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
 		line := scanner.Text()
 		parts := strings.Split(line, "\t")
 		username := parts[0]
-		hashedPassword, err := hex.DecodeString(parts[1])
+		password, err := hex.DecodeString(parts[1])
 		if err != nil {
 			log.Fatal(err)
 		}
-		user := User{username, hashedPassword}
-		users = append(users, user)
+		users[username] = password
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -99,9 +96,20 @@ func initDatabase() []User {
 	return users
 }
 
-// open for timing attack
-func checkPW(password string, dbHashedPassword []byte) boolean {
-	bytePassword := []byte(password)
-	hash := sha1.Sum(bytePassword)
+func checkPassword(password string, correctPassword []byte) bool {
+	bytes := []byte(password)
+	hash := sha1.Sum(bytes)
 
+	n := len(correctPassword)
+	if len(hash) != n {
+		return false
+	}
+
+	for i := 0; i < n; i++ {
+		if hash[i] != correctPassword[i] {
+			return false
+		}
+	}
+
+	return true
 }

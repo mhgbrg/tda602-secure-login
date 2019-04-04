@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-type User struct {
+type user struct {
 	username string
 	password string
 }
@@ -23,14 +23,14 @@ func main() {
 	}
 }
 
-func readUsers() []User {
+func readUsers() []user {
 	file, err := os.Open("users.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer file.Close()
 
-	users := make([]User, 0)
+	users := make([]user, 0)
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -38,7 +38,7 @@ func readUsers() []User {
 		parts := strings.Split(line, "\t")
 		username := parts[0]
 		password := parts[1]
-		user := User{username, password}
+		user := user{username, password}
 		users = append(users, user)
 	}
 
