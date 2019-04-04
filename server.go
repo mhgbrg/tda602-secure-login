@@ -9,7 +9,10 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func handler(w http.ResponseWriter, r *http.Request) {
+const defaultUsername = "admin"
+const defaultPassword = "password"
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
 	t, err := template.ParseFiles("login.html")
 	if err != nil {
 		log.Panic(err)
@@ -22,12 +25,24 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hej")
+	err := r.ParseForm()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	username := r.Form.Get("username")
+	password := r.Form.Get("password")
+
+	if username == defaultUsername && password == defaultPassword {
+		fmt.Fprint(w, "Login successful!!!")
+	} else {
+		fmt.Fprint(w, "Access denied!!!")
+	}
 }
 
 func main() {
 	router := mux.NewRouter()
-	router.HandleFunc("/", handler)
+	router.HandleFunc("/", indexHandler).Methods("GET")
 	router.HandleFunc("/login", loginHandler).Methods("POST")
 	http.ListenAndServe(
 		"localhost:8080",
