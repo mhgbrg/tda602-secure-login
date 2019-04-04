@@ -18,8 +18,13 @@ import (
 
 func main() {
 	users := loadUsers()
+	loginTemplate, err := template.ParseFiles("login.html")
+	if err != nil {
+		log.Panic(err)
+	}
+
 	router := mux.NewRouter()
-	router.HandleFunc("/", indexHandler).Methods("GET")
+	router.HandleFunc("/", indexHandler(loginTemplate)).Methods("GET")
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
 	http.ListenAndServe(
 		"localhost:8080",
@@ -29,15 +34,17 @@ func main() {
 
 // --- HANDLERS ---
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	t, err := template.ParseFiles("login.html")
-	if err != nil {
-		log.Panic(err)
-	}
+func indexHandler(loginTemplate *template.Template) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		t, err := template.ParseFiles("login.html")
+		if err != nil {
+			log.Panic(err)
+		}
 
-	err = t.Execute(w, nil)
-	if err != nil {
-		log.Panic(err)
+		err = t.Execute(w, nil)
+		if err != nil {
+			log.Panic(err)
+		}
 	}
 }
 
@@ -48,7 +55,7 @@ func loginHandler(users map[string][]byte) func(http.ResponseWriter, *http.Reque
 			log.Panic(err)
 		}
 
-		username := r.Form.Get("username")
+		username := strings.TrimSpace(r.Form.Get("username"))
 		password := r.Form.Get("password")
 
 		correctPassword, ok := users[username]

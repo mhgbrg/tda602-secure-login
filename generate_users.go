@@ -15,8 +15,8 @@ var passwordChars = []rune(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQR
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	usernames := readFile("names.txt")
-	words := readFile("words.txt")
+	usernames := readFile("data/names.txt")
+	words := readFile("data/words.txt")
 
 	for i := 0; i < 50; i++ {
 		username := usernames[i]
