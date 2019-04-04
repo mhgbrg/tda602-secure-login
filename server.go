@@ -62,6 +62,12 @@ func loginHandler(users map[string][]byte) func(http.ResponseWriter, *http.Reque
 			return
 		}
 
+		http.SetCookie(w, &http.Cookie{
+			Name:  "username",
+			Value: username,
+		})
+
+		// TODO: Redirect to /
 		fmt.Fprint(w, "Login successful!!!")
 	}
 }
