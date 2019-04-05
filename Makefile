@@ -11,4 +11,4 @@ serve: build
 
 .PHONY: watch
 watch:
-	ag -l -u | entr -r make serve
+	ag -l | entr -r make serve

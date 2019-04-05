@@ -65,12 +65,12 @@ func loginHandler(users map[string][]byte) func(http.ResponseWriter, *http.Reque
 
 		correctPassword, ok := users[username]
 		if !ok {
-			fmt.Fprintf(w, "Access denied (invalid username)!!!")
+			fmt.Fprintf(w, "Access denied!!!")
 			return
 		}
 
 		if !checkPassword(password, correctPassword) {
-			fmt.Fprintf(w, "Access denied (wrong password)!!!")
+			fmt.Fprintf(w, "Access denied!!!")
 			return
 		}
 
@@ -79,13 +79,17 @@ func loginHandler(users map[string][]byte) func(http.ResponseWriter, *http.Reque
 			Value: username,
 		})
 
-		// TODO: Redirect to /
-		fmt.Fprint(w, "Login successful!!!")
+		http.Redirect(w, r, "/", http.StatusFound)
 	}
 }
 
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
-
+	http.SetCookie(w, &http.Cookie{
+		Name:   "username",
+		Value:  "",
+		MaxAge: -1,
+	})
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // --- HELPERS ---
