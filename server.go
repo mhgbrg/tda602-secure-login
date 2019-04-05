@@ -22,10 +22,15 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	logoutTemplate, err := template.ParseFiles("logout.html")
+	if err != nil {
+		log.Panic(err)
+	}
 
 	router := mux.NewRouter()
-	router.HandleFunc("/", indexHandler(loginTemplate)).Methods("GET")
+	router.HandleFunc("/", indexHandler(loginTemplate, logoutTemplate)).Methods("GET")
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
+	router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	http.ListenAndServe(
 		"localhost:8080",
 		router,
@@ -34,14 +39,14 @@ func main() {
 
 // --- HANDLERS ---
 
-func indexHandler(loginTemplate *template.Template) func(http.ResponseWriter, *http.Request) {
+func indexHandler(loginTemplate, logoutTemplate *template.Template) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		t, err := template.ParseFiles("login.html")
-		if err != nil {
-			log.Panic(err)
+		cookie, err := r.Cookie("username")
+		if err == http.ErrNoCookie {
+			err = loginTemplate.Execute(w, nil)
+		} else {
+			err = logoutTemplate.Execute(w, cookie.Value)
 		}
-
-		err = t.Execute(w, nil)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -77,6 +82,10 @@ func loginHandler(users map[string][]byte) func(http.ResponseWriter, *http.Reque
 		// TODO: Redirect to /
 		fmt.Fprint(w, "Login successful!!!")
 	}
+}
+
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+
 }
 
 // --- HELPERS ---
