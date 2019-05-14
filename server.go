@@ -31,10 +31,12 @@ func main() {
 	router.HandleFunc("/", indexHandler(loginTemplate, logoutTemplate)).Methods("GET")
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
-	http.ListenAndServe(
-		"localhost:8080",
+	log.Fatal(http.ListenAndServeTLS(
+		os.Getenv("HOST"),      // "localhost:8081",
+		os.Getenv("CERT_FILE"), // "keys/fullchain.pem",
+		os.Getenv("KEY_FILE"),  // "keys/privkey.pem",
 		router,
-	)
+	))
 }
 
 // --- HANDLERS ---

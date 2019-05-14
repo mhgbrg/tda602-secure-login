@@ -11,4 +11,4 @@ serve: build
 
 .PHONY: watch
 watch:
-	ag -l | entr -r make serve
+	ag -l | entr -r -s "HOST=localhost:8080 CERT_FILE=keys/fullchain.pem KEY_FILE=keys/privkey.pem make serve"
