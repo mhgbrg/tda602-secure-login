@@ -32,9 +32,9 @@ func main() {
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	log.Fatal(http.ListenAndServeTLS(
-		os.Getenv("HOST"),      // "localhost:8081",
-		os.Getenv("CERT_FILE"), // "keys/fullchain.pem",
-		os.Getenv("KEY_FILE"),  // "keys/privkey.pem",
+		os.Getenv("HOST"),
+		os.Getenv("CERT_FILE"),
+		os.Getenv("KEY_FILE"),
 		router,
 	))
 }
