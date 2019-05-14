@@ -27,12 +27,18 @@ func main() {
 		log.Panic(err)
 	}
 
+	httpHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTP_PORT")
+	log.Printf("listening for http requests on %s", httpHost)
+	go http.ListenAndServe(httpHost, http.HandlerFunc(httpHandler))
+
 	router := mux.NewRouter()
 	router.HandleFunc("/", indexHandler(loginTemplate, logoutTemplate)).Methods("GET")
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
+	httpsHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTPS_PORT")
+	log.Printf("listening for https requests on %s", httpsHost)
 	log.Fatal(http.ListenAndServeTLS(
-		os.Getenv("HOST"),
+		httpsHost,
 		os.Getenv("CERT_FILE"),
 		os.Getenv("KEY_FILE"),
 		router,
@@ -40,6 +46,22 @@ func main() {
 }
 
 // --- HANDLERS ---
+
+func httpHandler(w http.ResponseWriter, r *http.Request) {
+	hostParts := strings.Split(r.Host, ":")
+	var host string
+	if len(hostParts) == 1 {
+		host = hostParts[0]
+	} else {
+		host = hostParts[0] + ":" + os.Getenv("HTTPS_PORT")
+	}
+	target := "https://" + host + r.URL.Path
+	if len(r.URL.RawQuery) > 0 {
+		target += "?" + r.URL.RawQuery
+	}
+	log.Printf("redirecting http://%s to %s", r.Host+r.URL.Path, target)
+	http.Redirect(w, r, target, http.StatusTemporaryRedirect)
+}
 
 func indexHandler(loginTemplate, logoutTemplate *template.Template) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
