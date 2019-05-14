@@ -20,21 +20,24 @@ func main() {
 	users := loadUsers()
 	loginTemplate, err := template.ParseFiles("login.html")
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 	logoutTemplate, err := template.ParseFiles("logout.html")
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
 
-	httpHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTP_PORT")
-	log.Printf("listening for http requests on %s", httpHost)
-	go http.ListenAndServe(httpHost, http.HandlerFunc(httpHandler))
+	go func() {
+		httpHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTP_PORT")
+		log.Printf("listening for http requests on %s", httpHost)
+		log.Fatal(http.ListenAndServe(httpHost, http.HandlerFunc(httpHandler)))
+	}()
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", indexHandler(loginTemplate, logoutTemplate)).Methods("GET")
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
+
 	httpsHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTPS_PORT")
 	log.Printf("listening for https requests on %s", httpsHost)
 	log.Fatal(http.ListenAndServeTLS(
@@ -72,7 +75,7 @@ func indexHandler(loginTemplate, logoutTemplate *template.Template) func(http.Re
 			err = logoutTemplate.Execute(w, cookie.Value)
 		}
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 	}
 }
@@ -81,7 +84,7 @@ func loginHandler(users map[string][]byte) func(http.ResponseWriter, *http.Reque
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
 		if err != nil {
-			log.Panic(err)
+			log.Fatal(err)
 		}
 
 		username := strings.TrimSpace(r.Form.Get("username"))
