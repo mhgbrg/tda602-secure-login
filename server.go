@@ -37,6 +37,7 @@ func main() {
 	router.HandleFunc("/", indexHandler(loginTemplate, logoutTemplate)).Methods("GET")
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	router.Use(hstsMiddleware)
 
 	httpsHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTPS_PORT")
