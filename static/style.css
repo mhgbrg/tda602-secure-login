@@ -8,6 +8,7 @@
 
 body {
   background: url("/static/bg.jpg") no-repeat center center fixed;
+  background-size: cover;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
