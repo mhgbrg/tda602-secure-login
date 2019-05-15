@@ -30,7 +30,7 @@ func main() {
 	go func() {
 		httpHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTP_PORT")
 		log.Printf("listening for http requests on %s", httpHost)
-		log.Fatal(http.ListenAndServe(httpHost, http.HandlerFunc(httpHandler)))
+		log.Fatal(http.ListenAndServe(httpHost, http.HandlerFunc(httpRedirectHandler)))
 	}()
 
 	router := mux.NewRouter()
@@ -38,7 +38,7 @@ func main() {
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
-	router.Use(hstsMiddleware)
+	router.Use(setHeadersMiddleware)
 
 	httpsHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTPS_PORT")
 	log.Printf("listening for https requests on %s", httpsHost)
@@ -52,14 +52,15 @@ func main() {
 
 // --- HANDLERS ---
 
-func hstsMiddleware(next http.Handler) http.Handler {
+func setHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+		w.Header().Set("Content-Security-Policy", "require-sri-for script style;")
 		next.ServeHTTP(w, r)
 	})
 }
 
-func httpHandler(w http.ResponseWriter, r *http.Request) {
+func httpRedirectHandler(w http.ResponseWriter, r *http.Request) {
 	hostParts := strings.Split(r.Host, ":")
 	var host string
 	if len(hostParts) == 1 {
