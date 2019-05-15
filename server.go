@@ -37,6 +37,7 @@ func main() {
 	router.HandleFunc("/", indexHandler(loginTemplate, logoutTemplate)).Methods("GET")
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
+	router.Use(hstsMiddleware)
 
 	httpsHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTPS_PORT")
 	log.Printf("listening for https requests on %s", httpsHost)
@@ -49,6 +50,13 @@ func main() {
 }
 
 // --- HANDLERS ---
+
+func hstsMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+		next.ServeHTTP(w, r)
+	})
+}
 
 func httpHandler(w http.ResponseWriter, r *http.Request) {
 	hostParts := strings.Split(r.Host, ":")
@@ -63,7 +71,7 @@ func httpHandler(w http.ResponseWriter, r *http.Request) {
 		target += "?" + r.URL.RawQuery
 	}
 	log.Printf("redirecting http://%s to %s", r.Host+r.URL.Path, target)
-	http.Redirect(w, r, target, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, target, http.StatusMovedPermanently)
 }
 
 func indexHandler(loginTemplate, logoutTemplate *template.Template) func(http.ResponseWriter, *http.Request) {
