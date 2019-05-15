@@ -4,3 +4,5 @@ generate_users
 !generate_users/
 hash_passwords
 !hash_passwords/
+__pycache__/
+
