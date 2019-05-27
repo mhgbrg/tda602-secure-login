@@ -32,6 +32,7 @@ func main() {
 	router.HandleFunc("/login", loginHandler(users)).Methods("POST")
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	router.Use(logMiddleware)
 
 	httpHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTP_PORT")
 	log.Printf("listening for http requests on %s", httpHost)
@@ -39,6 +40,12 @@ func main() {
 }
 
 // --- HANDLERS ---
+func logMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
+		next.ServeHTTP(w, r)
+	})
+}
 
 func indexHandler(loginTemplate, logoutTemplate *template.Template) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {

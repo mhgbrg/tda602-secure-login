@@ -39,6 +39,7 @@ func main() {
 	router.HandleFunc("/logout", logoutHandler).Methods("POST")
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	router.Use(setHeadersMiddleware)
+	router.Use(logMiddleware)
 
 	httpsHost := os.Getenv("HOSTNAME") + ":" + os.Getenv("HTTPS_PORT")
 	log.Printf("listening for https requests on %s", httpsHost)
@@ -56,6 +57,13 @@ func setHeadersMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
 		w.Header().Set("Content-Security-Policy", "require-sri-for script style;")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func logMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
 		next.ServeHTTP(w, r)
 	})
 }
